@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management - AttendAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AttendAI</div>
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="register.html">Registration</a>
+                <a href="attendance.html">Live Attendance</a>
+                <a href="records.html">Records</a>
+                <a href="students.html" class="active">Students</a>
+            </nav>
+        </header>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Student Management</h2>
+                    <p>View and manage registered student profiles</p>
+                </div>
+                <div class="actions-group">
+                    <a href="register.html" class="btn btn-primary" style="text-decoration: none;">
+                        <i class="fas fa-plus"></i> Add New Student
+                    </a>
+                </div>
+            </div>
+
+            <!-- Management Controls -->
+            <div class="records-header">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name or roll number..." oninput="applyFilters()">
+                </div>
+                
+                <div class="filter-group">
+                    <select id="courseFilter" title="Select Course" onchange="applyFilters()">
+                        <option value="">All Courses</option>
+                    </select>
+                    
+                    <select id="yearFilter" title="Select Year" onchange="applyFilters()">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="records-table-container">
+                <table id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>👤 Name</th>
+                            <th>🆔 Roll No</th>
+                            <th>🎓 Course</th>
+                            <th>📅 Year</th>
+                            <th>⚙️ Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsBody">
+                        <tr>
+                            <td colspan="5" class="no-results">
+                                <i class="fas fa-spinner fa-spin"></i> Fetching students...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="paginationInfo">
+                Showing <span id="countDisplay">0</span> registered students
+            </div>
+        </section>
+
+        <div id="notification"></div>
+    </div>
+
+    <script src="js/students.js"></script>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">AttendAI</div>
+            <p>Smart Face Recognition Attendance System</p>
+            <div class="footer-info">
+                <span>&copy; 2026 AttendAI. All rights reserved.</span>
+                <span>Designed for Modern Education</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

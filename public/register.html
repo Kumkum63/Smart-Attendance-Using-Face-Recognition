@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Student - AttendAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="js/register.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AttendAI</div>
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="register.html" class="active" style="color: var(--primary);">Registration</a>
+                <a href="attendance.html">Live Attendance</a>
+                <a href="records.html">Records</a>
+            </nav>
+        </header>
+
+        <section class="grid">
+            <div class="card form-card">
+                <div class="card-header">
+                    <div>
+                        <h2>New Student Registration</h2>
+                        <p>Fill in the details and capture the face to enroll.</p>
+                    </div>
+                </div>
+                
+
+                <form id="registerForm">
+                    <div class="input-group">
+                        <label>Student Full Name</label>
+                        <input type="text" id="studentName" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Student ID / Roll No</label>
+                        <input type="text" id="studentId" placeholder="e.g. CS101" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Course Name</label>
+                        <select id="studentCourse" required>
+                            <option value="" disabled selected>Select Course</option>
+                            <option value="BCA">BCA</option>
+                            <option value="B.Com">B.Com</option>
+                            <option value="B.Sc">B.Sc</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Enrollment Year</label>
+                        <select id="studentYear" required>
+                            <option value="" disabled selected>Select Year</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;" disabled>
+                            <span id="btnText">Capture & Register</span>
+                            <div class="loader" id="btnLoader"></div>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="status" class="status-badge status-loading" style="margin-top: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i> Initializing Face Models...
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="video-container">
+                    <video id="video" autoplay muted></video>
+                    <canvas id="overlay"></canvas>
+                </div>
+                <div style="margin-top: 15px; text-align: center; color: var(--text-muted);">
+                    <p id="instructionText">Position your face in the center of the frame.</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="notification"></div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">AttendAI</div>
+            <p>Smart Face Recognition Attendance System</p>
+            <div class="footer-info">
+                <span>&copy; 2026 AttendAI. All rights reserved.</span>
+                <span>Designed for Modern Education</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Records - AttendAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AttendAI</div>
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="register.html">Registration</a>
+                <a href="attendance.html">Live Attendance</a>
+                <a href="records.html" class="active">Records</a>
+            </nav>
+        </header>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Attendance Records</h2>
+                    <p>View and manage historical attendance data</p>
+                </div>
+                <div class="actions-group">
+                    <button onclick="exportToCSV()" class="btn btn-export">
+                        <i class="fas fa-file-export"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- View Switcher -->
+            <div class="view-switcher">
+                <button id="btnDaily" class="active" onclick="switchView('daily')">
+                    <i class="fas fa-calendar-day"></i> Daily Logs
+                </button>
+                <button id="btnMonthly" onclick="switchView('monthly')">
+                    <i class="fas fa-calendar-check"></i> Monthly Report
+                </button>
+            </div>
+
+            <!-- Dashboard Controls -->
+            <div class="records-header">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name or roll number..." oninput="applyFilters()">
+                </div>
+                
+                <div class="filter-group">
+                    <select id="courseFilter" title="Select Course" onchange="applyFilters()">
+                        <option value="">All Courses</option>
+                        <option value="BCA">BCA</option>
+                        <option value="B.Com">B.Com</option>
+                        <option value="B.Sc">B.Sc</option>
+                        <option value="MCA">MCA</option>
+                    </select>
+                    
+                    <select id="yearFilter" title="Select Year" onchange="applyFilters()">
+                        <option value="">All Years</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                    </select>
+
+                    <input type="date" id="dateFilter" title="Filter Date" onchange="applyFilters()">
+                </div>
+
+                <div class="sort-group">
+                    <select id="sortSelect" title="Select Date" onchange="applyFilters()">
+                        <option value="date_desc">Date (Newest First)</option>
+                        <option value="date_asc">Date (Oldest First)</option>
+                        <option value="name_asc">Name (A-Z)</option>
+                        <option value="name_desc">Name (Z-A)</option>
+                        <option value="perc_desc" id="sortPercDesc" style="display: none;">Attendance (High-Low)</option>
+                        <option value="perc_asc" id="sortPercAsc" style="display: none;">Attendance (Low-High)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="records-table-container">
+                <table id="recordsTable">
+                    <thead id="tableHead">
+                        <tr>
+                            <th>👤 Name</th>
+                            <th>🆔 Roll No</th>
+                            <th>🎓 Course / Year</th>
+                            <th>📅 Date</th>
+                            <th>⏰ Time</th>
+                            <th>📊 Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsBody">
+                        <tr>
+                            <td colspan="6" class="no-results">
+                                <i class="fas fa-spinner fa-spin"></i> Fetching records...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="paginationInfo">
+                Showing <span id="countDisplay">0</span> records
+            </div>
+        </section>
+
+        <div id="notification"></div>
+    </div>
+
+    <script>
+        let allRecords = [];
+        let filteredRecords = [];
+        let monthlyData = [];
+        let currentView = 'daily';
+
+        async function fetchRecords() {
+            try {
+                const res = await fetch('/api/attendance');
+                allRecords = await res.json();
+                populateFilters();
+                if (currentView === 'daily') applyFilters();
+            } catch (err) {
+                console.error('Error fetching records:', err);
+                document.getElementById('recordsBody').innerHTML = '<tr><td colspan="6" class="no-results" style="color: var(--danger);">Failed to load records.</td></tr>';
+            }
+        }
+
+        async function fetchMonthlySummary() {
+            try {
+                const res = await fetch('/api/attendance/monthly-summary');
+                const data = await res.json();
+                monthlyData = data.summary;
+                if (currentView === 'monthly') applyFilters();
+            } catch (err) {
+                console.error('Error fetching monthly summary:', err);
+            }
+        }
+
+        function switchView(mode) {
+            currentView = mode;
+            document.getElementById('btnDaily').classList.toggle('active', mode === 'daily');
+            document.getElementById('btnMonthly').classList.toggle('active', mode === 'monthly');
+            
+            // Toggle specific UI elements
+            document.getElementById('dateFilter').style.display = mode === 'daily' ? 'block' : 'none';
+            document.getElementById('sortPercDesc').style.display = mode === 'monthly' ? 'block' : 'none';
+            document.getElementById('sortPercAsc').style.display = mode === 'monthly' ? 'block' : 'none';
+
+            const tableHead = document.getElementById('tableHead');
+            if (mode === 'daily') {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>👤 Name</th>
+                        <th>🆔 Roll No</th>
+                        <th>🎓 Course / Year</th>
+                        <th>📅 Date</th>
+                        <th>⏰ Time</th>
+                        <th>📊 Status</th>
+                    </tr>
+                `;
+            } else {
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>👤 Name</th>
+                        <th>🆔 Roll No</th>
+                        <th>🎓 Course / Year</th>
+                        <th>📈 Monthly %</th>
+                        <th>📅 Days Present</th>
+                        <th>📊 Progress</th>
+                    </tr>
+                `;
+            }
+
+            if (mode === 'monthly' && monthlyData.length === 0) fetchMonthlySummary();
+            else applyFilters();
+        }
+
+        function populateFilters() {
+            const coursesInRecords = [...new Set(allRecords.map(r => r.course).filter(Boolean))];
+            const yearsInRecords = [...new Set(allRecords.map(r => r.year).filter(Boolean))];
+
+            const courseSelect = document.getElementById('courseFilter');
+            const yearSelect = document.getElementById('yearFilter');
+
+            const existingCourses = Array.from(courseSelect.options).map(opt => opt.value);
+            const existingYears = Array.from(yearSelect.options).map(opt => opt.value);
+
+            coursesInRecords.forEach(c => {
+                if (!existingCourses.includes(c)) {
+                    const opt = document.createElement('option');
+                    opt.value = opt.textContent = c;
+                    courseSelect.appendChild(opt);
+                }
+            });
+
+            yearsInRecords.forEach(y => {
+                if (!existingYears.includes(y)) {
+                    const opt = document.createElement('option');
+                    opt.value = opt.textContent = y;
+                    yearSelect.appendChild(opt);
+                }
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const course = document.getElementById('courseFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const date = document.getElementById('dateFilter').value;
+            const sort = document.getElementById('sortSelect').value;
+
+            const dataSource = currentView === 'daily' ? allRecords : monthlyData;
+
+            filteredRecords = dataSource.filter(r => {
+                const searchLower = searchTerm.toLowerCase();
+                const matchesSearch = 
+                    r.name.toLowerCase().includes(searchLower) || 
+                    r.studentId.toLowerCase().includes(searchLower);
+
+                const matchesCourse = course === "" || r.course === course;
+                const matchesYear = year === "" || r.year === year;
+                const matchesDate = currentView === 'monthly' ? true : (date === "" || r.date === date);
+
+                return matchesSearch && matchesCourse && matchesYear && matchesDate;
+            });
+
+            // Sorting logic
+            if (currentView === 'daily') {
+                if (sort === 'date_desc') filteredRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                else if (sort === 'date_asc') filteredRecords.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                else if (sort === 'name_asc') filteredRecords.sort((a, b) => a.name.localeCompare(b.name));
+                else if (sort === 'name_desc') filteredRecords.sort((a, b) => b.name.localeCompare(a.name));
+            } else {
+                if (sort === 'perc_desc') filteredRecords.sort((a, b) => b.percentage - a.percentage);
+                else if (sort === 'perc_asc') filteredRecords.sort((a, b) => a.percentage - b.percentage);
+                else if (sort === 'name_asc') filteredRecords.sort((a, b) => a.name.localeCompare(b.name));
+                else if (sort === 'name_desc') filteredRecords.sort((a, b) => b.name.localeCompare(a.name));
+            }
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('recordsBody');
+            const countDisplay = document.getElementById('countDisplay');
+            tbody.innerHTML = '';
+            
+            if (filteredRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="no-results">No ${currentView} records found.</td></tr>`;
+                countDisplay.innerText = 0;
+                return;
+            }
+
+            filteredRecords.forEach(r => {
+                const row = document.createElement('tr');
+                
+                if (currentView === 'daily') {
+                    const time = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    row.innerHTML = `
+                        <td><b>${r.name}</b></td>
+                        <td><code>${r.studentId}</code></td>
+                        <td><span style="color: var(--primary); font-size: 0.9rem;">${r.course || 'N/A'}</span> <small>(${r.year || '?'})</small></td>
+                        <td>${r.date}</td>
+                        <td>${time}</td>
+                        <td><span class="status-present">Present</span></td>
+                    `;
+                } else {
+                    const isLow = r.percentage < 75;
+                    row.innerHTML = `
+                        <td><b>${r.name}</b></td>
+                        <td><code>${r.studentId}</code></td>
+                        <td>${r.course || 'N/A'} (${r.year || '?'})</td>
+                        <td><span class="${isLow ? 'status-danger' : 'status-present'}">${r.percentage}%</span></td>
+                        <td>${r.presentDays} / ${r.totalDays} Total Days</td>
+                        <td>
+                            <div class="percentage-bar">
+                                <div class="percentage-fill ${isLow ? 'danger' : ''}" style="width: ${r.percentage}%"></div>
+                            </div>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(row);
+            });
+
+            countDisplay.innerText = filteredRecords.length;
+        }
+
+        function exportToCSV() {
+            if (filteredRecords.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            const headers = ['Name', 'Roll No', 'Course', 'Year', 'Date', 'Time', 'Status'];
+            const rows = filteredRecords.map(r => [
+                r.name, r.studentId, r.course || 'N/A', r.year || 'N/A', r.date,
+                new Date(r.timestamp).toLocaleTimeString(), 'Present'
+            ]);
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Attendance_Records.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        fetchRecords();
+    </script>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">AttendAI</div>
+            <p>Smart Face Recognition Attendance System</p>
+            <div class="footer-info">
+                <span>&copy; 2026 AttendAI. All rights reserved.</span>
+                <span>Designed for Modern Education</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

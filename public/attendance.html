@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Attendance - AttendAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="js/attendance.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AttendAI</div>
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="register.html">Registration</a>
+                <a href="attendance.html" class="active" style="color: var(--primary);">Live Attendance</a>
+                <a href="records.html">Records</a>
+            </nav>
+        </header>
+
+        <section class="grid">
+            <div class="card">
+                <div class="video-container">
+                    <video id="video" autoplay muted></video>
+                    <canvas id="overlay" style="position: absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+                    <div id="loadingOverlay" style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;">
+                        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+                        <p id="loadingStatus">Initializing AI Models...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Real-time Recognition</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">Detection is running. As soon as a registered face is identified, attendance will be marked.</p>
+
+                <div id="detectionStatus" class="status-badge status-loading">
+                    <i class="fas fa-sync fa-spin"></i> Models Loading...
+                </div>
+
+                <div id="attendanceInfo" style="margin-top: 30px; display: none; text-align: center; border: 1px dashed var(--accent); padding: 20px; border-radius: 12px; background: rgba(16, 185, 129, 0.05);">
+                    <h3 style="color: var(--accent);">Attendance Marked!</h3>
+                    <p id="studentNameDisplay" style="font-size: 1.5rem; font-weight: 700; margin-top: 10px;">John Doe</p>
+                    <p id="studentIdDisplay" style="color: var(--text-muted);">CS101</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem;">Timestamp: <span id="timestampDisplay">10:30 AM</span></p>
+                </div>
+
+                <div style="margin-top: 40px;">
+                    <h4>Recent Logs</h4>
+                    <div id="recentLogs" style="margin-top: 15px; font-size: 0.9rem; max-height: 200px; overflow-y: auto;">
+                        <p style="color: var(--text-muted);">Waiting for detections...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="notification"></div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">AttendAI</div>
+            <p>Smart Face Recognition Attendance System</p>
+            <div class="footer-info">
+                <span>&copy; 2026 AttendAI. All rights reserved.</span>
+                <span>Designed for Modern Education</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

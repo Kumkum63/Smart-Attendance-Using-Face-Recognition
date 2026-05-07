@@ -6,6 +6,8 @@ require('dotenv').config();
 
 const Student = require('./models/Student');
 const Attendance = require('./models/Attendance');
+const Teacher = require('./models/Teacher');
+const TeacherAttendance = require('./models/TeacherAttendance');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -195,6 +197,126 @@ app.delete('/api/students/:studentId', async (req, res) => {
         res.json({ success: true, message: `Student ${deletedStudent.name} and all their records deleted successfully.` });
     } catch (error) {
         console.error('Error deleting student:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+// --- TEACHER MODULE API ---
+
+// 7. Register Teacher
+app.post('/api/teachers/register', async (req, res) => {
+    try {
+        const { name, teacherId, subject, department, descriptors } = req.body;
+
+        // Check if Teacher ID already exists
+        const existingId = await Teacher.findOne({ teacherId });
+        if (existingId) {
+            return res.status(400).json({ success: false, message: 'Teacher ID already registered' });
+        }
+
+        // Unique Face Check for Teachers
+        const allTeachers = await Teacher.find({}, 'name teacherId descriptors');
+        const matchThreshold = 0.55;
+
+        for (const teacher of allTeachers) {
+            const distance = getEuclideanDistance(descriptors, teacher.descriptors);
+            if (distance < matchThreshold) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Face already registered under Teacher: ${teacher.name} (${teacher.teacherId}).` 
+                });
+            }
+        }
+
+        const newTeacher = new Teacher({ name, teacherId, subject, department, descriptors });
+        await newTeacher.save();
+
+        res.status(201).json({ success: true, message: 'Teacher registered successfully' });
+    } catch (error) {
+        console.error('Teacher Registration Error:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+// 8. Mark Teacher Attendance
+app.post('/api/teachers/attendance', async (req, res) => {
+    try {
+        const { teacherId, descriptors } = req.body;
+        const today = new Date().toISOString().split('T')[0];
+
+        const teacher = await Teacher.findOne({ teacherId });
+        if (!teacher) {
+            return res.status(404).json({ success: false, message: 'Teacher record not found.' });
+        }
+
+        // Face Verification
+        if (!descriptors) {
+            return res.status(400).json({ success: false, message: 'Face data missing.' });
+        }
+
+        const distance = getEuclideanDistance(descriptors, teacher.descriptors);
+        const verificationThreshold = 0.6;
+
+        if (distance > verificationThreshold) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Face verification failed! Face does not match registered Teacher ID.' 
+            });
+        }
+
+        // Check if already marked for today
+        const existingAttendance = await TeacherAttendance.findOne({ teacherId, date: today });
+        if (existingAttendance) {
+            return res.status(400).json({ success: false, message: `Attendance already marked for today` });
+        }
+
+        const newAttendance = new TeacherAttendance({
+            teacherId,
+            name: teacher.name,
+            subject: teacher.subject,
+            department: teacher.department,
+            date: today
+        });
+
+        await newAttendance.save();
+        res.status(201).json({ success: true, message: `Attendance marked for ${teacher.name}` });
+    } catch (error) {
+        console.error('Teacher Attendance Error:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+// 9. Get All Teachers
+app.get('/api/teachers', async (req, res) => {
+    try {
+        const teachers = await Teacher.find({}, 'name teacherId descriptors subject department');
+        res.json(teachers);
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching teachers' });
+    }
+});
+
+// 10. Get Teacher Attendance Records
+app.get('/api/teachers/records', async (req, res) => {
+    try {
+        const records = await TeacherAttendance.find().sort({ timestamp: -1 });
+        res.json(records);
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching teacher records' });
+    }
+});
+
+// 11. Delete Teacher
+app.delete('/api/teachers/:teacherId', async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+        const deletedTeacher = await Teacher.findOneAndDelete({ teacherId });
+        if (!deletedTeacher) {
+            return res.status(404).json({ success: false, message: 'Teacher not found.' });
+        }
+        await TeacherAttendance.deleteMany({ teacherId });
+        res.json({ success: true, message: `Teacher ${deletedTeacher.name} deleted successfully.` });
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });

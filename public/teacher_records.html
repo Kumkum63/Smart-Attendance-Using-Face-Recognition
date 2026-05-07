@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Records - AttendAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AttendAI</div>
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="teacher_register.html">Registration</a>
+                <a href="teacher_attendance.html">Live Attendance</a>
+                <a href="teacher_records.html" class="active" style="color: var(--primary);">Records</a>
+            </nav>
+        </header>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Teacher Attendance Records</h2>
+                    <p>View historical attendance data for faculty and staff.</p>
+                </div>
+                <div class="actions-group">
+                    <button onclick="exportTeacherCSV()" class="btn btn-export">
+                        <i class="fas fa-file-export"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="records-header">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="teacherSearchInput" placeholder="Search by name or Teacher ID..." oninput="applyTeacherFilters()">
+                </div>
+                
+                <div class="filter-group">
+                    <select id="departmentFilter" title="Select Department" onchange="applyTeacherFilters()">
+                        <option value="">All Departments</option>
+                        <option value="Science">Science</option>
+                        <option value="Arts">Arts</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Engineering">Engineering</option>
+                    </select>
+                    
+                    <input type="date" id="teacherDateFilter" title="Filter Date" onchange="applyTeacherFilters()">
+                </div>
+
+                <div class="sort-group">
+                    <select id="teacherSortSelect" title="Sort Logic" onchange="applyTeacherFilters()">
+                        <option value="date_desc">Date (Newest First)</option>
+                        <option value="date_asc">Date (Oldest First)</option>
+                        <option value="name_asc">Name (A-Z)</option>
+                        <option value="name_desc">Name (Z-A)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="records-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>👤 Name</th>
+                            <th>🆔 Teacher ID</th>
+                            <th>📚 Subject / Dept</th>
+                            <th>📅 Date</th>
+                            <th>⏰ Time</th>
+                            <th>📊 Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherRecordsBody">
+                        <tr>
+                            <td colspan="6" class="no-results">
+                                <i class="fas fa-spinner fa-spin"></i> Fetching teacher records...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="paginationInfo">
+                Showing <span id="teacherCountDisplay">0</span> records
+            </div>
+        </section>
+
+        <div id="notification"></div>
+    </div>
+
+    <script src="js/teacher_records.js"></script>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">AttendAI</div>
+            <p>Smart Face Recognition Attendance System</p>
+            <div class="footer-info">
+                <span>&copy; 2026 AttendAI. All rights reserved.</span>
+                <span>Designed for Modern Education</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
